@@ -1,0 +1,6 @@
+[submodule "src/ros_comm"]
+	path = src/ros_comm
+	url = https://github.com/SRI-CSL/ros_comm.git
+[submodule "src/nodelet_core"]
+	path = src/nodelet_core
+	url = https://github.com/SRI-CSL/nodelet_core.git

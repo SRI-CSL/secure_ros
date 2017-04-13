@@ -1,0 +1,59 @@
+- name: create racoon keys 
+  hosts: all
+  become: yes
+  become_method: sudo
+  handlers:
+    - name: restart setkey
+      service:
+        name: setkey
+        state: restarted
+
+    - name: restart racoon
+      service:
+        name: racoon
+        state: restarted
+
+    - name: restart iptables
+      service:
+        name: networking
+        state: restarted
+
+  tasks: 
+    - name: install ipsec dependencies
+      apt: name={{ item }} state=present
+      with_items:
+        - racoon
+        - ipsec-tools
+
+    - name: create directory "{{ racoon_folder }}"
+      file:
+        path: "{{ racoon_folder }}" 
+        state: directory
+        mode: 0755
+
+    - name: remove existing keys
+      file: path='/etc/racoon/certs/{{ item }}' state=absent
+      with_fileglob:
+        - "/etc/racoon/certs/*"
+      when: remove_keys is defined and remove_keys == True
+
+    - name: create ipsec racoon keys
+      script: scripts/racoon/create_key.py {{ ansible_hostname }}
+
+    - name: fetch public keys
+      fetch:
+        src=/etc/racoon/certs/{{ ansible_hostname }}.pub
+        dest={{ racoon_folder }}/etc/racoon/certs/{{ ansible_hostname }}.pub
+        flat=yes
+
+    - name: copy racoon public keys 
+      copy: src={{ item }} dest=/etc/racoon/certs/ owner=root mode=600
+      with_fileglob:
+        - "{{ racoon_folder }}/etc/racoon/certs/*.pub"
+
+    - name: create racoon configuration files 
+      script: scripts/racoon/create_config.py {{ ansible_hostname }} {{ example_conf }} 
+      notify:
+        - restart setkey
+        - restart racoon
+

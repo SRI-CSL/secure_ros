@@ -1,0 +1,12 @@
+aliases:
+  machine1: [127.0.0.1]
+topics:
+  /chatter:
+    publishers: [machine1]
+    subscribers: [machine1]
+  /counter:
+    publishers: [machine1]
+    subscribers: [machine1]
+nodes:
+  /talker: [machine1]
+  /listener: [machine1]

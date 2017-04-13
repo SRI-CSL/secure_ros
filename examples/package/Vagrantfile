@@ -1,0 +1,47 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+require 'yaml'
+
+VAGRANTFILE_API_VERSION = "2"
+# set SROS folder in host and guest 
+HOST_SROS_FOLDER = File.dirname( File.dirname( File.dirname(__FILE__) ) )
+GUEST_SROS_FOLDER = "/secure_ros"
+# load YAML configuration file for Secure ROS package
+VAGRANT_ROOT = File.dirname(__FILE__)
+SECURE_ROS_CONF = YAML.load_file("#{VAGRANT_ROOT}/secure_ros.yaml")
+VERSION = SECURE_ROS_CONF["version"]
+RELEASE = SECURE_ROS_CONF["release"]
+ARCHITECTURES = SECURE_ROS_CONF["architectures"]
+WORKSPACE = "~/workspace"
+MEMORY = SECURE_ROS_CONF["memory"]
+CPUS = SECURE_ROS_CONF["cpus"]
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  ARCHITECTURES.each do |arch_key,arch_val|
+    config.ssh.forward_agent = true
+    config.ssh.forward_x11 = true
+    config.vm.provider "virtualbox" do |v|
+      v.memory = MEMORY
+      v.cpus = CPUS
+    end
+    config.vm.synced_folder HOST_SROS_FOLDER, GUEST_SROS_FOLDER
+
+    machine_name = "#{RELEASE}-#{arch_key}"
+    config.vm.define "#{machine_name}" do |machine|
+      machine.vm.box = arch_val["box"]
+      machine.vm.hostname = machine_name
+
+      # build and package secure-ros package
+      config.vm.provision :ansible do |ansible|
+        ansible.limit = machine_name
+        ansible.playbook = "plays/install-secure-ros.yaml"
+        ansible.extra_vars = { 
+          secure_ros_folder: GUEST_SROS_FOLDER,
+          ros_release: RELEASE,
+          package_version: VERSION,
+        }
+      end
+    end
+  end
+end

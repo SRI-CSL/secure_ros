@@ -1,0 +1,74 @@
+# Create local facts 
+# Needs the following variables 
+#   ros_release: indigo, kinetic 
+#   package_version: version number of the Secure ROS package
+#   secure_ros_folder: location of the secure_ros repository on guest 
+- name: set variables
+  hosts: all
+  tasks:
+    - name: get dpkg architecture
+      shell: dpkg --print-architecture
+      register: dpkg_architecture
+    - set_fact:
+        arch: "{{ dpkg_architecture.stdout }}"
+        workspace: "~/workspace"
+        ros_depends:
+          - "ros-{{ ros_release }}-ros-comm"
+          - "ros-{{ ros_release }}-nodelet-core"
+          - "ros-{{ ros_release }}-cmake-modules"
+        package_name: "secure-ros-{{ ros_release }}-secure-ros"
+    - set_fact:
+        package_fullname: "{{ package_name }}_{{ package_version }}_{{ arch }}"
+    - set_fact:
+        release_path: "{{ secure_ros_folder }}/deb/{{ ros_release }}"
+    - set_fact:
+        package_path: "{{ release_path }}/{{ arch }}/{{ package_fullname }}"
+    - name: check if deb exists
+      debug: msg="{{ package_path }}.deb"
+    - stat: path="{{ package_path }}.deb"
+      register: deb 
+
+- name: set up ROS repository
+  hosts: all
+  become: yes
+  become_method: sudo
+  vars:
+    - ros_apt_package_uri: "http://packages.ros.org/ros/ubuntu"
+    - ros_apt_keyserver: "hkp://ha.pool.sks-keyservers.net"
+  tasks:
+    - name: add ROS repository key
+      apt_key:
+        keyserver: "{{ ros_apt_keyserver }}"
+        id: B01FA116
+        state: present
+
+    - name: add ROS repository
+      apt_repository:
+        repo: "deb {{ ros_apt_package_uri }} {{ ansible_lsb.codename }} main"
+        state: present
+        update_cache: yes
+
+    - name: install ROS packages "{{ ros_depends }}"
+      apt: name={{ item }} state=present
+      with_items: "{{ ros_depends }}"
+
+    - name: install build tools 
+      apt: name={{ item }} state=present
+      with_items:
+        - build-essential
+
+# build deb package if it does not exist
+- include: build-secure-ros.yaml
+  when: deb.stat.exists == False
+
+# install deb package (will remove secure-ros packages before installing)
+- name: set up ROS repository
+  hosts: all
+  become: yes
+  become_method: sudo
+  tasks:
+    - name: remove secure-ros package 
+      apt: name="{{ package_name }}" state=absent
+
+    - name: install secure ROS "{{ package_path }}.deb"
+      shell: dpkg -i "{{ package_path }}.deb"

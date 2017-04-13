@@ -1,0 +1,31 @@
+# Needs the following variables
+# ip_addr = IP address of machine
+# master_ip_addr = IP address of master
+# setup_file = setup.bash file (/opt/sros/indigo/setup.bash)
+- name: set up sros environment
+  hosts: all
+  tasks:
+    - name: ip address
+      debug: msg="{{ ip_addr }}"
+
+    - name: master ip address
+      debug: msg="{{ master_ip_addr }}"
+
+    - name: setup_file
+      debug: msg="{{ setup_file }}"
+
+    - name: create directory
+      file:
+        path=/home/vagrant/.bashrc.d 
+        state=directory 
+        mode=0755
+    - name: copy .bashrc.d/sros
+      template: 
+        src=secure_ros.bash.j2
+        dest=/home/vagrant/.bashrc.d/secure_ros.bash
+        force=yes
+    - name: copy .bashrc
+      template: 
+        src=bashrc.j2
+        dest=/home/vagrant/.bashrc
+        force=yes

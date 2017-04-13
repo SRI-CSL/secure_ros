@@ -1,0 +1,77 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+require 'yaml'
+
+VAGRANTFILE_API_VERSION = "2"
+# set SROS folder in host and guest 
+HOST_SROS_FOLDER = File.dirname( File.dirname( File.dirname(__FILE__) ) )
+GUEST_SROS_FOLDER = "/secure_ros"
+# load YAML configuration file for Secure ROS package
+VAGRANT_ROOT = File.dirname(__FILE__)
+SECURE_ROS_CONF = YAML.load_file("#{VAGRANT_ROOT}/secure_ros.yaml")
+VERSION = SECURE_ROS_CONF["version"]
+RELEASE = SECURE_ROS_CONF["release"]
+ARCHITECTURES = SECURE_ROS_CONF["architectures"]
+WORKSPACE = "~/workspace"
+SETUP_FILE = "/opt/secure_ros/#{RELEASE}/setup.bash"
+
+# load YAML configuration file for this example
+EXAMPLE_CONF = YAML.load_file("#{VAGRANT_ROOT}/example.yaml")
+MACHINES = EXAMPLE_CONF["machines"]
+MASTER_IP_ADDRESS = EXAMPLE_CONF["master_ip_address"]
+ARCH = EXAMPLE_CONF["arch"]
+MEMORY = EXAMPLE_CONF["memory"]
+CPUS = EXAMPLE_CONF["cpus"]
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  MACHINES.each_with_index do | (name, ip_address), index | 
+    config.vm.define "#{name}" do |machine|
+      machine.ssh.forward_agent = true
+      machine.ssh.forward_x11 = true
+      machine.vm.provider "virtualbox" do |v|
+        v.memory = MEMORY
+        v.cpus = CPUS
+      end
+      machine.vm.synced_folder HOST_SROS_FOLDER, GUEST_SROS_FOLDER
+
+      machine.vm.box = ARCHITECTURES[ARCH]["box"]
+      machine.vm.hostname = "#{name}"
+      machine.vm.network "private_network", ip: ip_address
+
+      # build and install secure-ros package
+      machine.vm.provision :ansible do |ansible|
+        ansible.limit = "#{name}"
+        ansible.playbook = "plays/install-secure-ros.yaml"
+        ansible.extra_vars = { 
+          secure_ros_folder: GUEST_SROS_FOLDER,
+          ros_release: RELEASE,
+          package_version: VERSION,
+        }
+      end
+
+      # set up secure ROS environment 
+      machine.vm.provision :ansible do |ansible|
+        ansible.limit = "#{name}"
+        ansible.playbook = "plays/configure-secure-ros.yaml"
+        ansible.extra_vars = { 
+          master_ip_addr: MASTER_IP_ADDRESS,
+          ip_addr: ip_address,
+          setup_file: SETUP_FILE,
+        }
+      end
+
+      # create security keys and configuration 
+      if index == MACHINES.length - 1
+        machine.vm.provision :ansible do |ansible|
+          ansible.limit = "all"
+          ansible.playbook = "plays/configure-racoon.yaml"
+          ansible.extra_vars = { 
+            example_conf: "/vagrant/example.yaml",
+            racoon_folder: "#{VAGRANT_ROOT}/.conf/racoon",
+          }
+        end
+      end
+    end
+  end
+end

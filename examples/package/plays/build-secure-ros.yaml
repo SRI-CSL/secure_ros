@@ -1,0 +1,82 @@
+# Build secure-ros and package it 
+# Needs the following variables 
+#   ros_release: "indigo" or "kinetic"
+#   package_name: the package name, e.g. ros-indigo-secure-ros
+#   package_version: the package version, e.g. 0.9.5
+#   release_path: location to store archives for the release
+#   package_path: location of the package, /path/to/ros-indigo-secure-ros_0.95.1_amd64
+#   ros_depends: ROS packages this package depends on
+#   
+- name: package secure ROS
+  hosts: all
+  vars:
+    - package_depends: "{{ ros_depends }}" 
+    - package_src: "{{ release_path }}/secure_ros-{{ package_version }}.tar.bz2"
+    - install_path: "{{ package_path }}/opt/secure_ros/{{ ros_release }}"
+    - workspace: "~/workspace/{{ ros_release }}"
+  tasks:
+    - name: package_src
+      debug: msg="{{ package_src }}"
+
+    - name: workspace
+      debug: msg="{{ workspace }}"
+
+    - name: package_path
+      debug: msg="{{ package_path }}"
+
+    - name: install_path
+      debug: msg="{{ install_path }}"
+
+    - name: remove directory "{{ package_path }}"
+      file: path={{ package_path }} state=absent mode=0755
+
+    - name: create directory "{{ install_path }}"
+      file: path={{ install_path }} state=directory mode=0755
+
+    - name: package src
+      shell: "tar --exclude=.git* -cjf {{ package_src }} src" 
+      args: 
+        chdir: "{{ secure_ros_folder }}"
+
+        #    - name: delete directory "{{ workspace }}"
+        #      file: path={{ workspace }} state=absent
+
+    - name: create directory "{{ workspace }}"
+      file: path={{ workspace }} state=directory mode=0755
+
+    - name: untar to "{{ workspace }}"
+      shell: tar xjf "{{ package_src }}"
+      args: 
+        chdir: "{{ workspace }}"
+
+    - name: build secure-ros
+      shell: source "/opt/ros/{{ ros_release }}/setup.bash"; catkin_make install
+      args: 
+        chdir: "{{ workspace }}"
+        executable: bash 
+
+    - name: archive secure-ros
+      shell: tar -C install -cjf "{{ package_path }}.tar.bz2" .
+      args: 
+        chdir: "{{ workspace }}"
+        creates: "{{ package_path }}.tar.bz2"
+
+    - name: untar to "{{ install_path }}"
+      shell: tar xjf "{{ package_path }}.tar.bz2"
+      args: 
+        chdir: "{{ install_path }}"
+
+    - name: create directory "{{ package_path }}/DEBIAN"
+      file:
+        path: "{{ package_path }}/DEBIAN" 
+        state: directory
+        mode: 0755
+
+    - name: create DEBIAN/control 
+      script: scripts/package/package_deb.py -P "{{ package_name }}" -V "{{ package_version }}" -D "{{ package_depends }}" -O "{{ package_path }}/DEBIAN/control" 
+
+    - name: dpkg "{{ package_path }}.deb" 
+      shell: dpkg --build "{{ package_path }}"
+      args:
+        creates: "{{ package_path }}.deb"
+

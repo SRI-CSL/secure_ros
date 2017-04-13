@@ -1,0 +1,13 @@
+aliases:
+  vm2: [192.168.10.202]
+  vm3: [192.168.10.203]
+topics:
+  /chatter:
+    publishers: [vm2]
+    subscribers: [vm3]
+  /counter:
+    publishers: [vm2]
+    subscribers: [vm3]
+nodes:
+  /talker: [vm2]
+  /listener: [vm3]

@@ -1,0 +1,10 @@
+# This is the configuration for this example
+cpus: 1
+memory: 1024
+master_ip_address: 192.168.10.201
+arch: amd64
+machines:
+  pubsub1: 192.168.10.201
+  pubsub2: 192.168.10.202
+  pubsub3: 192.168.10.203
+  pubsub4: 192.168.10.204

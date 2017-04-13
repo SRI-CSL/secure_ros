@@ -1,0 +1,8 @@
+# ~/.bashrc.d/sros: sourced by .bashrc
+
+echo "Sourcing {{ setup_file }}"
+source {{ setup_file }}
+export ROS_IP={{ip_addr}}
+echo "ROS_IP=$ROS_IP"
+export ROS_MASTER_URI=http://{{ master_ip_addr }}:11311/
+echo "ROS_MASTER_URI=$ROS_MASTER_URI"

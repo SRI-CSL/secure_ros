@@ -1,0 +1,13 @@
+aliases:
+  machine1: [127.0.0.1, 192.168.10.201]
+  machine2: [127.0.0.1, 192.168.10.201]
+topics:
+  /chatter:
+    publishers: [machine1]
+    subscribers: [machine1, machine2]
+  /counter:
+    publishers: [machine1]
+    subscribers: [machine1]
+nodes:
+  /talker: [machine1]
+  /listener: [machine1]
