@@ -20,7 +20,7 @@ To install Secure ROS, download the debian package from http://secure-ros.csl.sr
 
 ::
 
-  dpkg -i secure-ros-indigo-secure-ros_0.9.1-1_amd64.deb
+  dpkg -i secure-ros-<RELEASE>-secure-ros_<VERSION>_<ARCH>.deb
 
 The Secure ROS package files are installed in ``/opt/secure_ros/<release>/`` and includes modified versions of some ROS libraries and modules.
 

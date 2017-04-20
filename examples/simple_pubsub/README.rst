@@ -13,7 +13,7 @@ Using Secure ROS
 
 You need to source Secure ROS in each terminal. ::
 
-  source /opt/secure_ros/indigo/setup.bash
+  source /opt/secure_ros/kinetic/setup.bash
 
 Authorization configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -23,7 +23,11 @@ The authorization file (``ros_auth_simple_pubsub.yaml``) only allows certain nod
 Running the example
 ~~~~~~~~~~~~~~~~~~~
 
-All the nodes are run on a single machine (`machine1`). Please start the master and nodes in separate consoles. Change the working directory to ``examples/simple_pubsub`` in all the cases. The ``ROS_AUTH_FILE`` path is resolved with respect to the current working directory. 
+All the nodes are run on the same machine (`machine1`). Change the working directory to ``examples/simple_pubsub`` in all the cases and start the master and nodes in separate consoles. The ``ROS_AUTH_FILE`` path is resolved with respect to the current working directory. Note that if ``ROS_IP`` is not set, the ROS master is bound to all the network devices.  ``ROS_MASTER_URI`` has the default value ``http://<hostname>:11311`` which resolves to ``127.0.0.1`` in this case. ::
+
+  unset ROS_IP
+  unset ROS_MASTER_URI
+  source /opt/secure_ros/kinetic/setup.bash
 
 * Start the master node from the ``simple_pubsub`` directory. ::
 
@@ -42,30 +46,52 @@ All the nodes are run on a single machine (`machine1`). Please start the master 
   You may also run the C++ version *instead* of the python version (``rosrun test_secure_ros listener2``)
 
 
+Test Secure ROS
+~~~~~~~~~~~~~~~
+
+We test Secure ROS by querying the master locally and externally as described in the following sections.
+
+Test locally 
+^^^^^^^^^^^^
+
+You need to source Secure ROS in each terminal. ``ROS_MASTER_URI`` has the default value which is ``http://<hostname>:11311`` and the requests are routed through the local network. ::
+
+  unset ROS_IP
+  unset ROS_MASTER_URI
+  source /opt/secure_ros/kinetic/setup.bash
+
+Run the commands in :ref:`simple_pubsub_test`. You should have full access.
+
+Test externally 
+^^^^^^^^^^^^^^^
+
+If you set ``ROS_MASTER_URI`` with the external IP address of your machine (e.g. ``http://192.168.10.201:11311``), then the requests are routed through the network and not loopback (``127.0.0.1``). (You will need to replace the IP address ``192.168.10.201`` with your actual IP address.) ::
+
+  unset ROS_IP
+  source /opt/secure_ros/kinetic/setup.bash
+  export ROS_MASTER_URI=http://192.168.10.201:11311
+
+Run the commands in :ref:`simple_pubsub_test`. Secure ROS will deny the requests since the external IP address (``192.168.10.201``) is not an authorized IP address for any of these topics.
+
 .. _simple_pubsub_test:
 
-Test example
-~~~~~~~~~~~~
-
-You need to source Secure ROS in each terminal. ::
-
-  source /opt/secure_ros/indigo/setup.bash
-
-You may test Secure ROS by trying different ROS commands listed below. 
+ROS commands 
+^^^^^^^^^^^^
+You may test Secure ROS by trying ROS command line tools. 
 
 * Query rosmaster about topics ::
 
     rostopic list 
 
-* Subscribing to topics ::
+* Subscribe to topics ::
 
     rosrun test_secure_ros listener.py --anon 
 
-* Publishing to topics ::
+* Publish to topics ::
 
     rosrun test_secure_ros talker.py --anon
 
-* Service client (e.g. ``/talker/get_loggers``) ::
+* Call service (e.g. ``/talker/get_loggers``) ::
 
     rosservice call /talker/get_loggers
 
@@ -79,12 +105,9 @@ You may test Secure ROS by trying different ROS commands listed below.
     rosparam set /rosdistro "jade"
     rosparam get /rosdistro 
 
-* Killing nodes ::
+* Kill nodes ::
 
     rosnode kill -a 
-
-If ``ROS_IP`` is not set, the ROS master is bound to all the network devices. In the test examples, ``ROS_MASTER_URI`` has the default value which is ``http://<hostname>:11311``. If you set ``ROS_MASTER_URI`` with the external IP address of your machine (e.g. ``http://192.168.10.201:11311``), then the requests are routed through the ethernet device (and not localhost).
-Secure ROS will deny the requests since the external IP address (``192.168.10.201``) is not an authorized IP address for any of these topics.
 
 
 Variations of talker listener example (`simple_pubsub`)
@@ -95,7 +118,11 @@ In this section we list variations on the above example.
 Standalone version 
 ~~~~~~~~~~~~~~~~~~
 
-You may repeat the original example with ``ros_auth_simple_pubsub2.yaml`` where the external IP address has been added to the alias for `machine1`. (You will need to replace the IP address in ``ros_auth_simple_pubsub2.yaml`` with your actual IP address.)
+You may repeat the original example with ``ros_auth_simple_pubsub2.yaml`` where the external IP address has been added to the alias for `machine1`. (You will need to replace the IP address in ``ros_auth_simple_pubsub2.yaml`` with your actual IP address.) Run the master and nodes in different terminals. Run the following commands in each terminal. ::
+
+  unset ROS_IP
+  unset ROS_MASTER_URI
+  source /opt/secure_ros/kinetic/setup.bash
 
 To start the master node on `machine1`, ::
 
@@ -109,12 +136,18 @@ Start the listener on `machine1`, ::
 
   rosrun test_secure_ros listener.py
 
+You may then run the commands listed in :ref:`simple_pubsub_test` on `machine1`. :: 
+
+  source /opt/secure_ros/kinetic/setup.bash
+  export ROS_MASTER_URI=http://192.168.10.201:11311
+
 In this case, irrespective of whether you use the local (``http://localhost:11311``) or external (``http://192.168.10.201``) IP address in the ``ROS_MASTER_URI`` on `machine1`, you will be able to gain full access.
 
 *However*, you will *not* be able to access the nodes from another machine (`machine2`, IP address e.g.: ``192.168.10.202``).
 
 On machine2 (or any other machine on the network), set ``ROS_MASTER_URI``. :: 
 
+  source /opt/secure_ros/kinetic/setup.bash
   export ROS_MASTER_URI=http://192.168.10.201:11311/
 
 You will also need to set ``ROS_IP`` if the hostname of `machine2` cannot be resolved from `machine1`. ::
@@ -127,7 +160,12 @@ You may then run the commands in :ref:`simple_pubsub_test`. You should be unable
 Network version 
 ~~~~~~~~~~~~~~~
 
-You may modify the previous example by adding a second authorized machine (e.g. `machine2` with IP address ``192.168.10.202``) to the subscribers for topic ``/chatter`` (``ros_auth_simple_pubsub_network.yaml``).
+You may modify the previous example by adding a second authorized machine (e.g. `machine2` with IP address ``192.168.10.202``) to the subscribers for topic ``/chatter`` (``ros_auth_simple_pubsub_network.yaml``). Run the following commands in each terminal. ::
+
+  unset ROS_IP
+  unset ROS_MASTER_URI
+  source /opt/secure_ros/kinetic/setup.bash
+
 
 To start the master node on `machine1`, ::
 
@@ -143,6 +181,7 @@ Start the listener on `machine1`, ::
 
 On machine2, set ``ROS_MASTER_URI``. :: 
 
+  source /opt/secure_ros/kinetic/setup.bash
   export ROS_MASTER_URI=http://192.168.10.201:11311/
 
 You will also need to set ``ROS_IP`` if the hostname of `machine2` cannot be resolved from `machine1`. ::
