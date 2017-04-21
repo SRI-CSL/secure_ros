@@ -1,0 +1,14 @@
+modules:
+  src/ros_comm: 0.9.2
+  src/nodelet_core: 0.9.1
+architectures:
+  kinetic:
+    amd64:
+      box: "xenial64"
+    i386:
+      box: "xenial32"
+  indigo:
+    amd64:
+      box: "ubuntu/trusty64"
+    i386:
+      box: "ubuntu/trusty32"
