@@ -1,7 +1,7 @@
 cpus: 1
 memory: 1024
-release: kinetic
+release: indigo
 version: 0.9.2-1
 architectures:
-  amd64: {box: xenial64}
-  i386: {box: xenial32}
+  amd64: {box: ubuntu/trusty64}
+  i386: {box: ubuntu/trusty32}
