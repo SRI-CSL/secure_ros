@@ -46,10 +46,14 @@ def make_release( root, release, version, patch, conf_file ):
   make_secure_ros( secure_ros_file, release, full_version, conf["architectures"] )
 
   print( "\n== Now run the following ==\n" )
+  branch_name = "releases/%s-%s" % ( release, full_version )
+  tag_name = "%s/%s" % ( release, full_version )
+  msg = '"Add release %s"' % tag_name
   if release != "kinetic":
-    print( "git checkout -b %s-%s" % ( release, full_version ) )
-  print( "git commit -a -m 'Add release %s'" % full_version )
-  print( "git tag %s/%s" % ( release, full_version ) )
+    print( 'git checkout -b %s' % branch_name )
+    print( 'git commit -a -m %s' % msg )
+  print( 'git tag %s -f -a -m %s' % ( tag_name, msg ) )
+  print( 'git push origin %s"' % tag_name )
 
 
 if __name__ == "__main__":
