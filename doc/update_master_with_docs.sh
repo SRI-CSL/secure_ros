@@ -2,18 +2,19 @@
 
 if ! git diff-index --quiet HEAD; then
   echo "Git is dirty not touching it"
-  exit 1
+  return 1
 fi
 
-git_commit=`git rev-parse HEAD`
+git_commit=`git rev-parse --short HEAD`
+doc_tmp=`mktemp`
 
 # echo commands before running them to keep track of what is happening
 set -x
 
-make html || (echo failed to make doc; exit 1)
+make html || (echo failed to make doc; return 1)
 
-doc_tmp=`mktemp`
 tar -cf "${doc_tmp}" -C _build/html .
+make clean && rmdir _build
 
 git checkout master
 
@@ -30,3 +31,5 @@ set +x
 echo 
 echo 
 echo You are now on updated master branch
+
+return 0
