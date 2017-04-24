@@ -1,0 +1,796 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Introduction &#8212; Secure ROS 0.9.2 documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.9.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="top" title="Secure ROS 0.9.2 documentation" href="#" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="nav-item nav-item-0"><a href="#">Secure ROS 0.9.2 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="toctree-wrapper compound">
+</div>
+<div class="section" id="introduction">
+<h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
+<p>Secure ROS is a &#8220;fork&#8221; of core ROS packages to enable secure communication among ROS nodes (not to be confused with SROS, <a class="reference external" href="http://wiki.ros.org/SROS/">http://wiki.ros.org/SROS/</a>). The main goal of Secure ROS is to enable secure communication for regular users of ROS.</p>
+<p>The modified packages are <cite>rosmaster</cite>, <cite>rosgraph</cite>, <cite>roscpp</cite>, <cite>rospy</cite>, <cite>xmlrpcpp</cite> and <cite>nodelet</cite>.</p>
+<p>Secure ROS uses IPSec in transport mode and modified versions of the ROS master, <cite>rospy</cite> module and <cite>roscpp</cite> library to ensure secure communication.  At run time, the user can specify authorized subscribers and publishers to topics, setters and getters to parameters and providers (servers) and requesters (clients) of services in the form of a YAML configuration file for the ROS master. Secure ROS allows only authorized nodes to connect to topics, services and parameters listed in the configuration file.</p>
+<p>Secure ROS keeps ROS public API intact, allowing user level ROS packages to be used without modification. If no YAML configuration is provided, Secure ROS behaves like regular ROS (with no security).</p>
+<p>The Secure ROS website is at <a class="reference external" href="http://secure-ros.csl.sri.com/">http://secure-ros.csl.sri.com/</a>.</p>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>Please install ROS first (see <a class="reference external" href="http://wiki.ros.org/ROS/Installation">http://wiki.ros.org/ROS/Installation</a>).</p>
+<p>To install Secure ROS, download the debian package from <a class="reference external" href="http://secure-ros.csl.sri.com/download/">http://secure-ros.csl.sri.com/download/</a> and install with <cite>dpkg</cite>.  E.g.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">dpkg</span> <span class="o">-</span><span class="n">i</span> <span class="n">secure</span><span class="o">-</span><span class="n">ros</span><span class="o">-&lt;</span><span class="n">RELEASE</span><span class="o">&gt;-</span><span class="n">secure</span><span class="o">-</span><span class="n">ros_</span><span class="o">&lt;</span><span class="n">VERSION</span><span class="o">&gt;</span><span class="n">_</span><span class="o">&lt;</span><span class="n">ARCH</span><span class="o">&gt;.</span><span class="n">deb</span>
+</pre></div>
+</div>
+<p>The Secure ROS package files are installed in <code class="docutils literal"><span class="pre">/opt/secure_ros/&lt;release&gt;/</span></code> and includes modified versions of some ROS libraries and modules.</p>
+</div>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<p>The user can use the features of Secure ROS by sourcing <code class="docutils literal"><span class="pre">/opt/secure_ros/&lt;release&gt;/setup.bash</span></code> instead of <code class="docutils literal"><span class="pre">/opt/ros/&lt;release&gt;/setup.bash</span></code>. This will automatically include all packages installed in <code class="docutils literal"><span class="pre">/opt/ros/&lt;release&gt;/</span></code>.</p>
+<p>To enable secure communication, you also need to provide an authorization configuration file (relative to the working directory) when starting the ROS master. E.g.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">ROS_AUTH_FILE</span><span class="o">=</span><span class="n">ros_auth</span><span class="o">.</span><span class="n">yaml</span> <span class="n">roscore</span>
+</pre></div>
+</div>
+<p>If the <code class="docutils literal"><span class="pre">ROS_AUTH_FILE</span></code> environment variable is not defined, the Secure ROS master behaves like the regular ROS master. The configuration file is described in the next section. For further details, please see the example.</p>
+</div>
+<div class="section" id="authorization-configuration">
+<h2>Authorization Configuration<a class="headerlink" href="#authorization-configuration" title="Permalink to this headline">¶</a></h2>
+<p>A sample configuration file from the <cite>multi_pubsub</cite> example is provided below. The authorization configuration YAML file is a dictionary with the following keys: <code class="docutils literal"><span class="pre">aliases</span></code>, <code class="docutils literal"><span class="pre">topics</span></code>, <code class="docutils literal"><span class="pre">nodes</span></code>, <code class="docutils literal"><span class="pre">parameters</span></code> and <code class="docutils literal"><span class="pre">services</span></code>. The <code class="docutils literal"><span class="pre">topics</span></code> key is required but the others are optional. These key-value pairs are described in detail below.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">aliases</span><span class="p">:</span>
+  <span class="n">vm2</span><span class="p">:</span> <span class="p">[</span><span class="mf">192.168</span><span class="o">.</span><span class="mf">10.202</span><span class="p">]</span>
+  <span class="n">vm3</span><span class="p">:</span> <span class="p">[</span><span class="mf">192.168</span><span class="o">.</span><span class="mf">10.203</span><span class="p">]</span>
+<span class="n">topics</span><span class="p">:</span>
+  <span class="o">/</span><span class="n">chatter</span><span class="p">:</span>
+    <span class="n">publishers</span><span class="p">:</span> <span class="p">[</span><span class="n">vm2</span><span class="p">]</span>
+    <span class="n">subscribers</span><span class="p">:</span> <span class="p">[</span><span class="n">vm3</span><span class="p">]</span>
+  <span class="o">/</span><span class="n">counter</span><span class="p">:</span>
+    <span class="n">publishers</span><span class="p">:</span> <span class="p">[</span><span class="n">vm2</span><span class="p">]</span>
+    <span class="n">subscribers</span><span class="p">:</span> <span class="p">[</span><span class="n">vm3</span><span class="p">]</span>
+<span class="n">nodes</span><span class="p">:</span>
+  <span class="o">/</span><span class="n">talker</span><span class="p">:</span> <span class="p">[</span><span class="n">vm2</span><span class="p">]</span>
+  <span class="o">/</span><span class="n">listener</span><span class="p">:</span> <span class="p">[</span><span class="n">vm3</span><span class="p">]</span>
+</pre></div>
+</div>
+<ul>
+<li><p class="first"><code class="docutils literal"><span class="pre">aliases</span></code>: The value of the <code class="docutils literal"><span class="pre">aliases</span></code> key is a dict of <cite>(key,value)</cite> pairs where each keys is an alias and each value is the corresponding <em>list</em> of IP addresses. The IP address can also be a hostname that can be resolved by the master.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">topics</span></code>: The value of the <code class="docutils literal"><span class="pre">topics</span></code> key is a dict of <cite>(key,value)</cite> pairs where the keys are <em>all</em> the allowed topics excepting reserved topics. The reserved topics are <code class="docutils literal"><span class="pre">rosout</span></code> and <code class="docutils literal"><span class="pre">rosout_agg</span></code>. Each topic value is another dictionary with two required keys: <code class="docutils literal"><span class="pre">publishers</span></code> and <code class="docutils literal"><span class="pre">subscribers</span></code>. The value of the <code class="docutils literal"><span class="pre">publisher</span></code> and <code class="docutils literal"><span class="pre">subscriber</span></code> keys is a <em>list</em> of IP addresses that are the authorized publishers and subscribers to that topic respectively.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">nodes</span></code>: This is an optional key. The value of the key is a dict of <cite>(key,value)</cite> pairs where the keys are node names excepting reserved nodes. The reserved nodes are <code class="docutils literal"><span class="pre">rosout</span></code>. Each value is list of the IP addresses from which that node can register. If a node is listed as a key, then that node may only register from one of the associated IP addresses. If a node is not listed as a key or if the <code class="docutils literal"><span class="pre">nodes</span></code> key is not present, then any node may register from the list of <code class="docutils literal"><span class="pre">authorized_ip_addresses</span></code>.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">parameters</span></code>: This is an optional key. The value of the key is a dict of <cite>(key,value)</cite> pairs where the keys are parameter names (or parameter prefixes) other than the reserved parameters. The value of each key is another dict with two keys: <code class="docutils literal"><span class="pre">setters</span></code> (required) and <code class="docutils literal"><span class="pre">getters</span></code> (optional). The value of the <code class="docutils literal"><span class="pre">setters</span></code> and <code class="docutils literal"><span class="pre">getters</span></code> keys is a <em>list</em> of IP addresses that are the authorized setters and getters of that parameter respectively. If a parameter name is not listed, then that parameter may be set and accessed from any IP address in <code class="docutils literal"><span class="pre">authorized_ip_addresses</span></code>. If a parameter does not have the <code class="docutils literal"><span class="pre">getters</span></code> key, that parameter may be accessed from any IP address in <code class="docutils literal"><span class="pre">authorized_ip_addresses</span></code>.</p>
+<p>The reserved parameters are: <code class="docutils literal"><span class="pre">/run_id</span></code>, <code class="docutils literal"><span class="pre">/rosversion</span></code>, <code class="docutils literal"><span class="pre">/rosdistro</span></code>, <code class="docutils literal"><span class="pre">/tcp_keepalive</span></code>, <code class="docutils literal"><span class="pre">/use_sim_time</span></code>, <code class="docutils literal"><span class="pre">/enable_statistics</span></code>, <code class="docutils literal"><span class="pre">/statistics_window_min_elements</span></code>, <code class="docutils literal"><span class="pre">/statistics_window_max_elements</span></code>, <code class="docutils literal"><span class="pre">/statistics_window_min_size</span></code>, <code class="docutils literal"><span class="pre">/statistics_window_max_size</span></code></p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">services</span></code>: This is an optional key. The value of the key is a dict of <cite>(key,value)</cite> pairs. The keys are service names other than the reserved services. The value of each key is another dict with two keys: <code class="docutils literal"><span class="pre">providers</span></code> (required) and <code class="docutils literal"><span class="pre">requesters</span></code> (optional). The value of the <code class="docutils literal"><span class="pre">providers</span></code> and <code class="docutils literal"><span class="pre">requesters</span></code> keys is a <em>list</em> of IP addresses that are the authorized providers and requesters of that service respectively. If a service name is not listed, then that service may be set and accessed from any IP address in <code class="docutils literal"><span class="pre">authorized_ip_addresses</span></code>. If a service does not have the <code class="docutils literal"><span class="pre">requesters</span></code> key, that service may be accessed from any IP address in <code class="docutils literal"><span class="pre">authorized_ip_addresses</span></code>.</p>
+</li>
+</ul>
+<p><code class="docutils literal"><span class="pre">authorized_ip_addresses</span></code> is an internal set containing all the IP addresses that are listed in the authorization file. Any request from an IP address not on this list is, in general, discarded. This list is also used as an authorized list for nodes, parameters or services that are not explicitly listed in the file.</p>
+</div>
+</div>
+<div class="section" id="examples">
+<h1>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="simple-talker-listener-example-simple-pubsub">
+<h2>Simple talker listener example (<cite>simple_pubsub</cite>)<a class="headerlink" href="#simple-talker-listener-example-simple-pubsub" title="Permalink to this headline">¶</a></h2>
+<p>This example is a simple example to run Secure ROS using the built-in talker and listener example in a linux machine. The ROS master and nodes run on the same machine.</p>
+<div class="section" id="requirements">
+<h3>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h3>
+<p>Install ROS and corresponding version of Secure ROS on Ubuntu (ROS Indigo on 14.04 and ROS Kinetic on 16.04).</p>
+</div>
+<div class="section" id="using-secure-ros">
+<h3>Using Secure ROS<a class="headerlink" href="#using-secure-ros" title="Permalink to this headline">¶</a></h3>
+<p>You need to source Secure ROS in each terminal.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">source</span> <span class="o">/</span><span class="n">opt</span><span class="o">/</span><span class="n">secure_ros</span><span class="o">/</span><span class="n">kinetic</span><span class="o">/</span><span class="n">setup</span><span class="o">.</span><span class="n">bash</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id1">
+<h3>Authorization configuration<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<p>The authorization file (<code class="docutils literal"><span class="pre">ros_auth_simple_pubsub.yaml</span></code>) only allows certain nodes and all topics to be published to and subscribed to from your machine (<cite>machine1</cite>, IP address: <code class="docutils literal"><span class="pre">127.0.0.1</span></code>).</p>
+</div>
+<div class="section" id="running-the-example">
+<h3>Running the example<a class="headerlink" href="#running-the-example" title="Permalink to this headline">¶</a></h3>
+<p>All the nodes are run on the same machine (<cite>machine1</cite>). Change the working directory to <code class="docutils literal"><span class="pre">examples/simple_pubsub</span></code> in all the cases and start the master and nodes in separate consoles. The <code class="docutils literal"><span class="pre">ROS_AUTH_FILE</span></code> path is resolved with respect to the current working directory. Note that if <code class="docutils literal"><span class="pre">ROS_IP</span></code> is not set, the ROS master is bound to all the network devices.  <code class="docutils literal"><span class="pre">ROS_MASTER_URI</span></code> has the default value <code class="docutils literal"><span class="pre">http://&lt;hostname&gt;:11311</span></code> which resolves to <code class="docutils literal"><span class="pre">127.0.0.1</span></code> in this case.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">unset</span> <span class="n">ROS_IP</span>
+<span class="n">unset</span> <span class="n">ROS_MASTER_URI</span>
+<span class="n">source</span> <span class="o">/</span><span class="n">opt</span><span class="o">/</span><span class="n">secure_ros</span><span class="o">/</span><span class="n">kinetic</span><span class="o">/</span><span class="n">setup</span><span class="o">.</span><span class="n">bash</span>
+</pre></div>
+</div>
+<ul>
+<li><p class="first">Start the master node from the <code class="docutils literal"><span class="pre">simple_pubsub</span></code> directory.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">ROS_AUTH_FILE</span><span class="o">=</span><span class="n">ros_auth_simple_pubsub</span><span class="o">.</span><span class="n">yaml</span> <span class="n">roscore</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Start the talker node.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">rosrun</span> <span class="n">test_secure_ros</span> <span class="n">talker</span><span class="o">.</span><span class="n">py</span>
+</pre></div>
+</div>
+<p>You may also run the C++ version <em>instead</em> of the python version (<code class="docutils literal"><span class="pre">rosrun</span> <span class="pre">test_secure_ros</span> <span class="pre">talker2</span></code>)</p>
+</li>
+<li><p class="first">Start the listener node.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">rosrun</span> <span class="n">test_secure_ros</span> <span class="n">listener</span><span class="o">.</span><span class="n">py</span>
+</pre></div>
+</div>
+<p>You may also run the C++ version <em>instead</em> of the python version (<code class="docutils literal"><span class="pre">rosrun</span> <span class="pre">test_secure_ros</span> <span class="pre">listener2</span></code>)</p>
+</li>
+</ul>
+</div>
+<div class="section" id="test-secure-ros">
+<h3>Test Secure ROS<a class="headerlink" href="#test-secure-ros" title="Permalink to this headline">¶</a></h3>
+<p>We test Secure ROS by querying the master locally and externally as described in the following sections.</p>
+<div class="section" id="test-locally">
+<h4>Test locally<a class="headerlink" href="#test-locally" title="Permalink to this headline">¶</a></h4>
+<p>You need to source Secure ROS in each terminal. <code class="docutils literal"><span class="pre">ROS_MASTER_URI</span></code> has the default value which is <code class="docutils literal"><span class="pre">http://&lt;hostname&gt;:11311</span></code> and the requests are routed through the local network.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">unset</span> <span class="n">ROS_IP</span>
+<span class="n">unset</span> <span class="n">ROS_MASTER_URI</span>
+<span class="n">source</span> <span class="o">/</span><span class="n">opt</span><span class="o">/</span><span class="n">secure_ros</span><span class="o">/</span><span class="n">kinetic</span><span class="o">/</span><span class="n">setup</span><span class="o">.</span><span class="n">bash</span>
+</pre></div>
+</div>
+<p>Run the commands in <a class="reference internal" href="#simple-pubsub-test"><span class="std std-ref">ROS commands</span></a>. You should have full access.</p>
+</div>
+<div class="section" id="test-externally">
+<h4>Test externally<a class="headerlink" href="#test-externally" title="Permalink to this headline">¶</a></h4>
+<p>If you set <code class="docutils literal"><span class="pre">ROS_MASTER_URI</span></code> with the external IP address of your machine (e.g. <code class="docutils literal"><span class="pre">http://192.168.10.201:11311</span></code>), then the requests are routed through the network and not loopback (<code class="docutils literal"><span class="pre">127.0.0.1</span></code>). (You will need to replace the IP address <code class="docutils literal"><span class="pre">192.168.10.201</span></code> with your actual IP address.)</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">unset</span> <span class="n">ROS_IP</span>
+<span class="n">source</span> <span class="o">/</span><span class="n">opt</span><span class="o">/</span><span class="n">secure_ros</span><span class="o">/</span><span class="n">kinetic</span><span class="o">/</span><span class="n">setup</span><span class="o">.</span><span class="n">bash</span>
+<span class="n">export</span> <span class="n">ROS_MASTER_URI</span><span class="o">=</span><span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="mf">192.168</span><span class="o">.</span><span class="mf">10.201</span><span class="p">:</span><span class="mi">11311</span>
+</pre></div>
+</div>
+<p>Run the commands in <a class="reference internal" href="#simple-pubsub-test"><span class="std std-ref">ROS commands</span></a>. Secure ROS will deny the requests since the external IP address (<code class="docutils literal"><span class="pre">192.168.10.201</span></code>) is not an authorized IP address for any of these topics.</p>
+</div>
+<div class="section" id="ros-commands">
+<span id="simple-pubsub-test"></span><h4>ROS commands<a class="headerlink" href="#ros-commands" title="Permalink to this headline">¶</a></h4>
+<p>You may test Secure ROS by trying ROS command line tools.</p>
+<ul>
+<li><p class="first">Query rosmaster about topics</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">rostopic</span> <span class="nb">list</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Subscribe to topics</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">rosrun</span> <span class="n">test_secure_ros</span> <span class="n">listener</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">anon</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Publish to topics</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">rosrun</span> <span class="n">test_secure_ros</span> <span class="n">talker</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">anon</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Call service (e.g. <code class="docutils literal"><span class="pre">/talker/get_loggers</span></code>)</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">rosservice</span> <span class="n">call</span> <span class="o">/</span><span class="n">talker</span><span class="o">/</span><span class="n">get_loggers</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Get parameters</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">rosparam</span> <span class="nb">list</span>
+<span class="n">rosparam</span> <span class="n">get</span> <span class="o">/</span><span class="n">rosdistro</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Set parameters</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">rosparam</span> <span class="nb">set</span> <span class="o">/</span><span class="n">rosdistro</span> <span class="s2">&quot;jade&quot;</span>
+<span class="n">rosparam</span> <span class="n">get</span> <span class="o">/</span><span class="n">rosdistro</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Kill nodes</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">rosnode</span> <span class="n">kill</span> <span class="o">-</span><span class="n">a</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="section" id="variations-of-talker-listener-example-simple-pubsub">
+<h2>Variations of talker listener example (<cite>simple_pubsub</cite>)<a class="headerlink" href="#variations-of-talker-listener-example-simple-pubsub" title="Permalink to this headline">¶</a></h2>
+<p>In this section we list variations on the above example.</p>
+<div class="section" id="standalone-version">
+<h3>Standalone version<a class="headerlink" href="#standalone-version" title="Permalink to this headline">¶</a></h3>
+<p>You may repeat the original example with <code class="docutils literal"><span class="pre">ros_auth_simple_pubsub2.yaml</span></code> where the external IP address has been added to the alias for <cite>machine1</cite>. (You will need to replace the IP address in <code class="docutils literal"><span class="pre">ros_auth_simple_pubsub2.yaml</span></code> with your actual IP address.) Run the master and nodes in different terminals. Run the following commands in each terminal.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">unset</span> <span class="n">ROS_IP</span>
+<span class="n">unset</span> <span class="n">ROS_MASTER_URI</span>
+<span class="n">source</span> <span class="o">/</span><span class="n">opt</span><span class="o">/</span><span class="n">secure_ros</span><span class="o">/</span><span class="n">kinetic</span><span class="o">/</span><span class="n">setup</span><span class="o">.</span><span class="n">bash</span>
+</pre></div>
+</div>
+<p>To start the master node on <cite>machine1</cite>,</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">ROS_AUTH_FILE</span><span class="o">=</span><span class="n">ros_auth_simple_pubsub2</span><span class="o">.</span><span class="n">yaml</span> <span class="n">roscore</span>
+</pre></div>
+</div>
+<p>Start the talker on <cite>machine1</cite>,</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">rosrun</span> <span class="n">test_secure_ros</span> <span class="n">talker</span><span class="o">.</span><span class="n">py</span>
+</pre></div>
+</div>
+<p>Start the listener on <cite>machine1</cite>,</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">rosrun</span> <span class="n">test_secure_ros</span> <span class="n">listener</span><span class="o">.</span><span class="n">py</span>
+</pre></div>
+</div>
+<p>You may then run the commands listed in <a class="reference internal" href="#simple-pubsub-test"><span class="std std-ref">ROS commands</span></a> on <cite>machine1</cite>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">source</span> <span class="o">/</span><span class="n">opt</span><span class="o">/</span><span class="n">secure_ros</span><span class="o">/</span><span class="n">kinetic</span><span class="o">/</span><span class="n">setup</span><span class="o">.</span><span class="n">bash</span>
+<span class="n">export</span> <span class="n">ROS_MASTER_URI</span><span class="o">=</span><span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="mf">192.168</span><span class="o">.</span><span class="mf">10.201</span><span class="p">:</span><span class="mi">11311</span>
+</pre></div>
+</div>
+<p>In this case, irrespective of whether you use the local (<code class="docutils literal"><span class="pre">http://localhost:11311</span></code>) or external (<code class="docutils literal"><span class="pre">http://192.168.10.201</span></code>) IP address in the <code class="docutils literal"><span class="pre">ROS_MASTER_URI</span></code> on <cite>machine1</cite>, you will be able to gain full access.</p>
+<p><em>However</em>, you will <em>not</em> be able to access the nodes from another machine (<cite>machine2</cite>, IP address e.g.: <code class="docutils literal"><span class="pre">192.168.10.202</span></code>).</p>
+<p>On machine2 (or any other machine on the network), set <code class="docutils literal"><span class="pre">ROS_MASTER_URI</span></code>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">source</span> <span class="o">/</span><span class="n">opt</span><span class="o">/</span><span class="n">secure_ros</span><span class="o">/</span><span class="n">kinetic</span><span class="o">/</span><span class="n">setup</span><span class="o">.</span><span class="n">bash</span>
+<span class="n">export</span> <span class="n">ROS_MASTER_URI</span><span class="o">=</span><span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="mf">192.168</span><span class="o">.</span><span class="mf">10.201</span><span class="p">:</span><span class="mi">11311</span><span class="o">/</span>
+</pre></div>
+</div>
+<p>You will also need to set <code class="docutils literal"><span class="pre">ROS_IP</span></code> if the hostname of <cite>machine2</cite> cannot be resolved from <cite>machine1</cite>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">export</span> <span class="n">ROS_IP</span><span class="o">=</span><span class="mf">192.168</span><span class="o">.</span><span class="mf">10.202</span>
+</pre></div>
+</div>
+<p>You may then run the commands in <a class="reference internal" href="#simple-pubsub-test"><span class="std std-ref">ROS commands</span></a>. You should be unable to register with the master, subscribe, publish, or otherwise access information.</p>
+</div>
+<div class="section" id="network-version">
+<h3>Network version<a class="headerlink" href="#network-version" title="Permalink to this headline">¶</a></h3>
+<p>You may modify the previous example by adding a second authorized machine (e.g. <cite>machine2</cite> with IP address <code class="docutils literal"><span class="pre">192.168.10.202</span></code>) to the subscribers for topic <code class="docutils literal"><span class="pre">/chatter</span></code> (<code class="docutils literal"><span class="pre">ros_auth_simple_pubsub_network.yaml</span></code>). Run the following commands in each terminal.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">unset</span> <span class="n">ROS_IP</span>
+<span class="n">unset</span> <span class="n">ROS_MASTER_URI</span>
+<span class="n">source</span> <span class="o">/</span><span class="n">opt</span><span class="o">/</span><span class="n">secure_ros</span><span class="o">/</span><span class="n">kinetic</span><span class="o">/</span><span class="n">setup</span><span class="o">.</span><span class="n">bash</span>
+</pre></div>
+</div>
+<p>To start the master node on <cite>machine1</cite>,</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">ROS_AUTH_FILE</span><span class="o">=</span><span class="n">ros_auth_simple_pubsub2</span><span class="o">.</span><span class="n">yaml</span> <span class="n">roscore</span>
+</pre></div>
+</div>
+<p>Start the talker on <cite>machine1</cite>,</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">rosrun</span> <span class="n">test_secure_ros</span> <span class="n">talker</span><span class="o">.</span><span class="n">py</span>
+</pre></div>
+</div>
+<p>Start the listener on <cite>machine1</cite>,</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">rosrun</span> <span class="n">test_secure_ros</span> <span class="n">listener</span><span class="o">.</span><span class="n">py</span>
+</pre></div>
+</div>
+<p>On machine2, set <code class="docutils literal"><span class="pre">ROS_MASTER_URI</span></code>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">source</span> <span class="o">/</span><span class="n">opt</span><span class="o">/</span><span class="n">secure_ros</span><span class="o">/</span><span class="n">kinetic</span><span class="o">/</span><span class="n">setup</span><span class="o">.</span><span class="n">bash</span>
+<span class="n">export</span> <span class="n">ROS_MASTER_URI</span><span class="o">=</span><span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="mf">192.168</span><span class="o">.</span><span class="mf">10.201</span><span class="p">:</span><span class="mi">11311</span><span class="o">/</span>
+</pre></div>
+</div>
+<p>You will also need to set <code class="docutils literal"><span class="pre">ROS_IP</span></code> if the hostname of <cite>machine2</cite> cannot be resolved from <cite>machine1</cite>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">export</span> <span class="n">ROS_IP</span><span class="o">=</span><span class="mf">192.168</span><span class="o">.</span><span class="mf">10.202</span>
+</pre></div>
+</div>
+<p>You should then be able to subscribe to <code class="docutils literal"><span class="pre">/chatter</span></code> from <cite>machine2</cite>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">rostopic</span> <span class="n">echo</span> <span class="o">/</span><span class="n">chatter</span>
+</pre></div>
+</div>
+<p>However you will be unable to subscribe to <code class="docutils literal"><span class="pre">/counter</span></code> from <cite>machine2</cite>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">rostopic</span> <span class="n">echo</span> <span class="o">/</span><span class="n">chatter</span>
+</pre></div>
+</div>
+<p>You will also have restricted access to information from the master on <cite>machine2</cite>. E.g. <cite>rostopic list</cite> will list only a subset of the topics (i.e. the topics that <cite>machine2</cite> needs to know).</p>
+</div>
+</div>
+<div class="section" id="multi-machine-talker-listener-example-multi-pubsub">
+<h2>Multi-machine talker listener example (<cite>multi_pubsub</cite>)<a class="headerlink" href="#multi-machine-talker-listener-example-multi-pubsub" title="Permalink to this headline">¶</a></h2>
+<p>This example is a multi-machine example to run Secure ROS using the built-in talker and listener example. This example uses multiple VMs configured to use IPSec and requires Virtualbox, Vagrant and Ansible. Please see the section on <a class="reference internal" href="#vagrant-and-ansible"><span class="std std-ref">Vagrant and ansible</span></a> for details on installing and using vagrant and ansible.</p>
+<p>The vagrant configuration for this example is loaded from the <code class="docutils literal"><span class="pre">example.yaml</span></code> file</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">cpus</span><span class="p">:</span> <span class="mi">1</span>
+<span class="n">memory</span><span class="p">:</span> <span class="mi">1024</span>
+<span class="n">master_ip_address</span><span class="p">:</span> <span class="mf">192.168</span><span class="o">.</span><span class="mf">10.201</span>
+<span class="n">arch</span><span class="p">:</span> <span class="n">amd64</span>
+<span class="n">pkg</span><span class="p">:</span> <span class="n">ros</span><span class="o">-</span><span class="n">comm</span>
+<span class="n">machines</span><span class="p">:</span>
+  <span class="n">pubsub1</span><span class="p">:</span> <span class="mf">192.168</span><span class="o">.</span><span class="mf">10.201</span>
+  <span class="n">pubsub2</span><span class="p">:</span> <span class="mf">192.168</span><span class="o">.</span><span class="mf">10.202</span>
+  <span class="n">pubsub3</span><span class="p">:</span> <span class="mf">192.168</span><span class="o">.</span><span class="mf">10.203</span>
+  <span class="n">pubsub4</span><span class="p">:</span> <span class="mf">192.168</span><span class="o">.</span><span class="mf">10.204</span>
+</pre></div>
+</div>
+<p>The minimum number of Virtual Machines (VMs) required for the example is 3. pubsub4 may be used as a malicious machine to test Secure ROS and intercept ROS communication.</p>
+<div class="section" id="id2">
+<h3>Requirements<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<p>The following requirements are needed to run the example.</p>
+<ul class="simple">
+<li>Connection to the internet on the host machine so that vagrant and ansible can fetch the images and debian packages.</li>
+<li>At least N=4 free cores on the host machine</li>
+<li>At least 4096MB RAM for the guest machines (1024 MB per guest)</li>
+</ul>
+<p>If you don&#8217;t meet the requirements for N=4, you may try with N=3 (3 cores, 3072MB RAM) or use less RAM.</p>
+</div>
+<div class="section" id="starting-the-vms">
+<h3>Starting the VMs<a class="headerlink" href="#starting-the-vms" title="Permalink to this headline">¶</a></h3>
+<p>You may bring up the VMs using the following command.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">vagrant</span> <span class="n">up</span>
+</pre></div>
+</div>
+<div class="section" id="vagrant-tasks">
+<h4>Vagrant tasks<a class="headerlink" href="#vagrant-tasks" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li>Bring up the corresponding VMs as specified in the <code class="docutils literal"><span class="pre">example.yaml</span></code> configuration file.</li>
+<li>Set up the networking as a private network along with appropriate IP addresses as specified in <code class="docutils literal"><span class="pre">example.yaml</span></code>.</li>
+<li>Provision the VMs as specified in the <code class="docutils literal"><span class="pre">example.yaml</span></code> and <code class="docutils literal"><span class="pre">secure_ros.yaml</span></code> files.</li>
+</ul>
+</div>
+<div class="section" id="ansible-playbooks">
+<span id="pubsub-ansible"></span><h4>Ansible playbooks<a class="headerlink" href="#ansible-playbooks" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">plays/install-secure-ros.yaml</span></code>: This installs the appropriate Secure ROS package from a deb file. If the deb file is not present, it is is created once (and used from that point).</li>
+<li><code class="docutils literal"><span class="pre">plays/build-secure-ros.yaml</span></code>: This builds the appropriate Secure ROS package and creates the deb file.</li>
+<li><code class="docutils literal"><span class="pre">plays/configure-secure-ros.yaml</span></code>: This sets up the Secure ROS environment with the appropriate bashrc files containing ROS_IP, ROS_MASTER_URI, location of the source file.</li>
+<li><code class="docutils literal"><span class="pre">plays/configure-racoon.yaml</span></code>: This configures the system security (IPsec) using <code class="docutils literal"><span class="pre">racoon</span></code>. The secure keys are created in each VM and the public keys are distributed to all VMs. The racoon and setkey configuration files are also created and the corresponding services are started. This information</li>
+</ul>
+</div>
+</div>
+<div class="section" id="id3">
+<h3>Authorization configuration<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<p>The authorization configuration is in <code class="docutils literal"><span class="pre">ros_auth_multi_pubsub.yaml</span></code> and its contents are presented below.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">aliases</span><span class="p">:</span>
+  <span class="n">vm2</span><span class="p">:</span> <span class="p">[</span><span class="mf">192.168</span><span class="o">.</span><span class="mf">10.202</span><span class="p">]</span>
+  <span class="n">vm3</span><span class="p">:</span> <span class="p">[</span><span class="mf">192.168</span><span class="o">.</span><span class="mf">10.203</span><span class="p">]</span>
+<span class="n">topics</span><span class="p">:</span>
+  <span class="o">/</span><span class="n">chatter</span><span class="p">:</span>
+    <span class="n">publishers</span><span class="p">:</span> <span class="p">[</span><span class="n">vm2</span><span class="p">]</span>
+    <span class="n">subscribers</span><span class="p">:</span> <span class="p">[</span><span class="n">vm3</span><span class="p">]</span>
+  <span class="o">/</span><span class="n">counter</span><span class="p">:</span>
+    <span class="n">publishers</span><span class="p">:</span> <span class="p">[</span><span class="n">vm2</span><span class="p">]</span>
+    <span class="n">subscribers</span><span class="p">:</span> <span class="p">[</span><span class="n">vm3</span><span class="p">]</span>
+<span class="n">nodes</span><span class="p">:</span>
+  <span class="o">/</span><span class="n">talker</span><span class="p">:</span> <span class="p">[</span><span class="n">vm2</span><span class="p">]</span>
+  <span class="o">/</span><span class="n">listener</span><span class="p">:</span> <span class="p">[</span><span class="n">vm3</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id4">
+<h3>Running the example<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<p>To run the nodes, run the following commands in the different VMs. Note that the correct environment is sourced from the files generated by <em>ansible</em>.</p>
+<p>You will be able to ssh into each VM using vagrant from the root of the example folder (where the Vagrantfile is). For instance, to ssh into VM1, use the following command.:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">vagrant</span> <span class="n">ssh</span> <span class="n">pubsub1</span>
+</pre></div>
+</div>
+<p>On VM1</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">ROS_AUTH_FILE</span><span class="o">=/</span><span class="n">vagrant</span><span class="o">/</span><span class="n">ros_auth_multi_pubsub</span><span class="o">.</span><span class="n">yaml</span> <span class="n">roscore</span>
+</pre></div>
+</div>
+<p>On VM2</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">rosrun</span> <span class="n">test_secure_ros</span> <span class="n">talker</span><span class="o">.</span><span class="n">py</span>
+</pre></div>
+</div>
+<p>You may also run the C++ version <em>instead</em> of the python version.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">rosrun</span> <span class="n">test_secure_ros</span> <span class="n">talker2</span>
+</pre></div>
+</div>
+<p>On VM3</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">rosrun</span> <span class="n">test_secure_ros</span> <span class="n">listener</span><span class="o">.</span><span class="n">py</span>
+</pre></div>
+</div>
+<p>You may also run the C++ version <em>instead</em> of the python version.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">rosrun</span> <span class="n">test_secure_ros</span> <span class="n">listener2</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="test-example">
+<h3>Test example<a class="headerlink" href="#test-example" title="Permalink to this headline">¶</a></h3>
+<p>You may test Secure ROS as follows.</p>
+<ul>
+<li><p class="first"><strong>Check IPSec:</strong> You may check the communication between VMs using <code class="docutils literal"><span class="pre">tcpdump</span></code>. Note that in Ubuntu 16.04, the network device may be named <code class="docutils literal"><span class="pre">enp0s8</span></code> or similar rather than <code class="docutils literal"><span class="pre">eth1</span></code>. You may find the name of the device using <code class="docutils literal"><span class="pre">ifconfig</span></code> and checking the device name that has the IP address <code class="docutils literal"><span class="pre">192.168.10.201</span></code> on the guest machine.:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">vagrant</span> <span class="n">ssh</span> <span class="n">pubsub2</span>
+<span class="n">sudo</span> <span class="n">tcpdump</span> <span class="o">-</span><span class="n">i</span> <span class="n">eth1</span>
+</pre></div>
+</div>
+<p>You should see something like the following. The IP packets exchanged between pubsub2 and pubsub3 (192.168.10.203) are shown with AH (Authentication Headers) and ESP (Encapsulating Security Payload).</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>[vagrant@pubsub2 ~]$ sudo tcpdump -i eth1
+tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+listening on eth1, link-type EN10MB (Ethernet), capture size 65535 bytes
+23:24:01.021656 IP pubsub2 &gt; 192.168.10.203: AH(spi=0x0622f190,seq=0x4e): ESP(spi=0x0914f871,seq=0x4e), length 76
+23:24:01.022429 IP 192.168.10.203 &gt; pubsub2: AH(spi=0x076e48d8,seq=0x50): ESP(spi=0x0c784394,seq=0x50), length 68
+23:24:02.021656 IP pubsub2 &gt; 192.168.10.203: AH(spi=0x0622f190,seq=0x4f): ESP(spi=0x0914f871,seq=0x4f), length 100
+23:24:02.022335 IP 192.168.10.203 &gt; pubsub2: AH(spi=0x076e48d8,seq=0x51): ESP(spi=0x0c784394,seq=0x51), length 68
+</pre></div>
+</div>
+</li>
+<li><p class="first"><strong>Query rosmaster about topics:</strong> You may query the rosmaster for topics from VM1. All topics are shown.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>[vagrant@pubsub1 ~]$ rostopic list
+/chatter
+/counter
+/rosout
+/rosout_agg
+</pre></div>
+</div>
+<p>You may query the rosmaster for topics from VM2. Only topics relevant to VM2 are shown.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>[vagrant@pubsub2 ~]$ rostopic list
+/chatter
+/counter
+/rosout
+</pre></div>
+</div>
+<p>You may query the rosmaster for topics from VM4. Zero topics are shown since VM4 is not an authorized IP machine.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>[vagrant@pubsub4 ~]$ rostopic list
+</pre></div>
+</div>
+</li>
+<li><p class="first"><strong>Starting a node from the wrong machine:</strong> Starting a new node with the same name as an existing node causes the master to send a shutdown signal to the existing node, but this is not allowed if the list of nodes with corresponding IP addresses is present in the authorization file as it is in the example.</p>
+<p>E.g. Launch <code class="docutils literal"><span class="pre">/listener</span></code> from VM3, but with the node name <code class="docutils literal"><span class="pre">/talker</span></code>. The node has permission to listen to the topics, but not to have the name <code class="docutils literal"><span class="pre">/talker</span></code>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>[vagrant@pubsub3 ~]$ rosrun test_secure_ros listener.py --name talker
+[FATAL] [WallTime: 1490114153.855925] unable to register publication [/rosout] with master: Not authorized
+[FATAL] [WallTime: 1490114153.863927] unable to register service [/talker/get_loggers] with master: Not authorized
+[FATAL] [WallTime: 1490114153.867944] unable to register service [/talker/set_logger_level] with master: Not authorized
+Started node /talker
+Subscribing to /chatter
+[FATAL] [WallTime: 1490114154.377988] unable to register subscription [/chatter] with master: Not authorized
+Subscribing to /counter
+[FATAL] [WallTime: 1490114154.886248] unable to register subscription [/counter] with master: Not authorized
+</pre></div>
+</div>
+<p>On the master, you see that the node name registration is denied.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">auth</span><span class="p">][</span><span class="n">WARNING</span><span class="p">]</span> <span class="n">registerPublisher</span><span class="p">(</span> <span class="o">/</span><span class="n">talker</span><span class="p">,</span> <span class="o">/</span><span class="n">rosout</span><span class="p">,</span> <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="mf">192.168</span><span class="o">.</span><span class="mf">10.203</span><span class="p">:</span><span class="mi">48231</span><span class="o">/</span><span class="p">,</span> <span class="mf">192.168</span><span class="o">.</span><span class="mf">10.203</span> <span class="p">)</span> <span class="n">caller_id</span> <span class="ow">not</span> <span class="n">authorized</span>
+<span class="p">[</span><span class="n">auth</span><span class="p">][</span><span class="n">WARNING</span><span class="p">]</span> <span class="n">registerSubscriber</span><span class="p">(</span> <span class="o">/</span><span class="n">talker</span><span class="p">,</span> <span class="o">/</span><span class="n">counter</span><span class="p">,</span> <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="mf">192.168</span><span class="o">.</span><span class="mf">10.203</span><span class="p">:</span><span class="mi">48231</span><span class="o">/</span><span class="p">,</span> <span class="mf">192.168</span><span class="o">.</span><span class="mf">10.203</span> <span class="p">)</span> <span class="n">caller_id</span> <span class="ow">not</span> <span class="n">authorized</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first"><strong>Subscribing to topics:</strong> You can try to subscribe to a topic from an unauthorized machine. Note that if an IP address is an authorized publisher to a topic, then it is <em>implicitly</em> an authorized subscriber.</p>
+<p>E.g. Run <code class="docutils literal"><span class="pre">listener.py</span></code> from VM2 with anonymous name.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>[vagrant@pubsub4 ~]$ rosrun test_secure_ros listener.py --anon
+FATAL] [WallTime: 1490826202.717182] unable to register publication [/rosout] with master: caller_id not authorized
+[FATAL] [WallTime: 1490826202.723819] unable to register service [/listener_11108_1490826202704/get_loggers] with master: caller_id not authorized
+[FATAL] [WallTime: 1490826202.727966] unable to register service [/listener_11108_1490826202704/set_logger_level] with master: caller_id not authorized
+Started node /listener_11108_1490826202704
+Subscribing to /chatter
+[FATAL] [WallTime: 1490826203.239365] unable to register subscription [/chatter] with master: caller_id not authorized
+Subscribing to /counter
+[FATAL] [WallTime: 1490826203.750798] unable to register subscription [/counter] with master: caller_id not authorized
+</pre></div>
+</div>
+</li>
+<li><p class="first"><strong>Publishing to topics:</strong></p>
+<p>You can try to publish to a topic from an unauthorized machine.
+E.g. Run <code class="docutils literal"><span class="pre">talker.py</span></code> from VM3 with anonymous name.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>vagrant@pubsub3 ~]$ rosrun test_secure_ros talker.py --anon
+...
+Started node /talker_11475_1490827477247
+Publishing to /chatter
+[FATAL] [WallTime: 1490827477.878853] unable to register publication [/chatter] with master: topic not authorized
+Publishing to /counter
+[FATAL] [WallTime: 1490827478.385780] unable to register publication [/counter] with master: topic not authorized
+</pre></div>
+</div>
+<p>On the master.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">auth</span><span class="p">][</span><span class="n">WARNING</span><span class="p">]</span> <span class="n">registerPublisher</span><span class="p">(</span> <span class="o">/</span><span class="n">talker_11475_1490827477247</span><span class="p">,</span> <span class="o">/</span><span class="n">chatter</span><span class="p">,</span> <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="mf">192.168</span><span class="o">.</span><span class="mf">10.203</span><span class="p">:</span><span class="mi">37924</span><span class="o">/</span><span class="p">,</span> <span class="mf">192.168</span><span class="o">.</span><span class="mf">10.203</span> <span class="p">)</span> <span class="n">topic</span> <span class="ow">not</span> <span class="n">authorized</span>
+<span class="o">...</span>
+<span class="p">[</span><span class="n">auth</span><span class="p">][</span><span class="n">WARNING</span><span class="p">]</span> <span class="n">registerPublisher</span><span class="p">(</span> <span class="o">/</span><span class="n">talker_11475_1490827477247</span><span class="p">,</span> <span class="o">/</span><span class="n">counter</span><span class="p">,</span> <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="mf">192.168</span><span class="o">.</span><span class="mf">10.203</span><span class="p">:</span><span class="mi">37924</span><span class="o">/</span><span class="p">,</span> <span class="mf">192.168</span><span class="o">.</span><span class="mf">10.203</span> <span class="p">)</span> <span class="n">topic</span> <span class="ow">not</span> <span class="n">authorized</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first"><strong>Service client:</strong> You can try to call a service from an unauthorized machine (VM4).
+E.g. Call <code class="docutils literal"><span class="pre">/talker/get_loggers</span></code> from VM4.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>[vagrant@pubsub4 ~]$ rosservice call /talker/get_loggers
+ERROR: Unable to determine type of service [/talker/get_loggers].
+</pre></div>
+</div>
+<p>On the master.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">auth</span><span class="p">][</span><span class="n">WARNING</span><span class="p">]</span> <span class="n">lookupService</span><span class="p">(</span> <span class="o">/</span><span class="n">rosservice</span><span class="p">,</span> <span class="o">/</span><span class="n">talker</span><span class="o">/</span><span class="n">get_loggers</span><span class="p">,</span> <span class="mf">192.168</span><span class="o">.</span><span class="mf">10.204</span> <span class="p">)</span> <span class="n">service</span> <span class="ow">not</span> <span class="n">authorized</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first"><strong>Get parameters:</strong> You can try to get parameter from unauthorized machine (VM4).</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>[vagrant@pubsub4 ~]$ rosparam list
+</pre></div>
+</div>
+<p>You can try to get parameter from authorized machine (VM2).</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>[vagrant@pubsub2 ~]$ rosparam get /rosdistro
+&#39;indigo
+
+  &#39;
+</pre></div>
+</div>
+</li>
+<li><p class="first"><strong>Set parameters:</strong> You can try to set parameter from unauthorized machine (VM2).</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>[vagrant@pubsub2 ~]$ rosparam set /rosdistro &quot;jade&quot;
+...
+rosgraph.masterapi.MasterError: parameter not authorized
+</pre></div>
+</div>
+<p>You can try to set parameter from authorized machine (VM1).</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>[vagrant@pubsub1 ~]$ rosparam get /rosdistro
+&#39;indigo
+
+  &#39;
+
+[vagrant@pubsub1 ~]$ rosparam set /rosdistro jade
+[vagrant@pubsub1 ~]$ rosparam get /rosdistro
+jade
+</pre></div>
+</div>
+</li>
+<li><p class="first"><strong>Killing nodes:</strong> You can try to kill nodes from an unauthorized machine (only the master machine is allowed to kill nodes).
+First from VM3.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>[vagrant@pubsub3 ~]$ rosnode kill -a
+killing:
+ * /listener
+ * /rosout
+ * /talker
+ERROR: Failed to kill:
+ * /listener
+ * /talker
+[vagrant@pubsub3 ~]$ rosnode list
+/listener
+/rosout
+/talker
+</pre></div>
+</div>
+<p>Next from VM1.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>[vagrant@pubsub1 ~]$ rosnode kill -a
+killing:
+ * /listener
+ * /rosout
+ * /talker
+killed
+[vagrant@pubsub1 ~]$ rosnode list
+/rosout
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="section" id="packaging-secure-ros">
+<h1>Packaging Secure ROS<a class="headerlink" href="#packaging-secure-ros" title="Permalink to this headline">¶</a></h1>
+<p>This folder contains tools (vagrant and ansible) for creating Ubuntu debian packages for Secure ROS. Please see the section on <a class="reference internal" href="#vagrant-and-ansible"><span class="std std-ref">Vagrant and ansible</span></a> for details on installing and using vagrant and ansible.</p>
+<div class="section" id="supported-architectures-and-packages">
+<h2>Supported architectures and packages<a class="headerlink" href="#supported-architectures-and-packages" title="Permalink to this headline">¶</a></h2>
+<p>The following architectures are supported.</p>
+<ul class="simple">
+<li>amd64 (64-bit PC)</li>
+<li>i386 (32-bit PC)</li>
+</ul>
+<p>The following releases are supported</p>
+<ul class="simple">
+<li>ROS <cite>indigo</cite> (Ubuntu 14.04) on the <cite>indigo-devel</cite> branch.</li>
+<li>ROS <cite>kinetic</cite> (Ubuntu 16.04) on the <cite>kinetic-devel</cite> branch.</li>
+</ul>
+<p>The <code class="docutils literal"><span class="pre">secure-ros-&lt;release&gt;-ros-comm</span></code> package is created for each of the architectures. This includes modified versions of libraries (e.g <code class="docutils literal"><span class="pre">libroscpp.so</span></code>) and python modules (<code class="docutils literal"><span class="pre">roslaunch</span></code>, <code class="docutils literal"><span class="pre">rospy</span></code>) which will be installed in <code class="docutils literal"><span class="pre">/opt/secure_ros/&lt;release&gt;/</span></code>.</p>
+</div>
+<div class="section" id="generating-the-packages">
+<h2>Generating the packages<a class="headerlink" href="#generating-the-packages" title="Permalink to this headline">¶</a></h2>
+<p>The packages can be generated as follows.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">vagrant</span> <span class="n">up</span>
+</pre></div>
+</div>
+<p>The package is created in the root folder of the repository: <code class="docutils literal"><span class="pre">deb/&lt;arch&gt;/secure-ros-&lt;release&gt;-ros-comm_&lt;version&gt;_&lt;arch&gt;.deb</span></code>. The build is preserved if the VMs are halted, but will need to be rebuilt if the VMs are destroyed.</p>
+<div class="section" id="id5">
+<h3>Vagrant tasks<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Bring up the VMs as specified in the <code class="docutils literal"><span class="pre">secure_ros.yaml</span></code> configuration file.</li>
+<li>Provision the VMs as specified in the <code class="docutils literal"><span class="pre">secure_ros.yaml</span></code> files (build, create and install the Secure ROS package).</li>
+</ul>
+</div>
+<div class="section" id="id6">
+<h3>Ansible playbooks<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">plays/install-secure-ros.yaml</span></code>: Please see <a class="reference internal" href="#pubsub-ansible"><span class="std std-ref">Ansible playbooks</span></a>.</li>
+<li><code class="docutils literal"><span class="pre">plays/build-secure-ros.yaml</span></code>: Please see <a class="reference internal" href="#pubsub-ansible"><span class="std std-ref">Ansible playbooks</span></a>.</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="section" id="vagrant-and-ansible">
+<span id="id7"></span><h1>Vagrant and ansible<a class="headerlink" href="#vagrant-and-ansible" title="Permalink to this headline">¶</a></h1>
+<p>We use <em>ansible</em> and <em>vagrant</em> to create and configure multiple VMs to run the examples and create debian package for Secure ROS.</p>
+<div class="section" id="install-vagrant-and-ansible">
+<h2>Install Vagrant and ansible<a class="headerlink" href="#install-vagrant-and-ansible" title="Permalink to this headline">¶</a></h2>
+<p>We support Ubuntu (14.04, 16.04) and OS X. It is relatively easy to install on Ubuntu, while on Mac OS X, it is a bit more involved.</p>
+<div class="section" id="ubuntu">
+<h3>Ubuntu<a class="headerlink" href="#ubuntu" title="Permalink to this headline">¶</a></h3>
+<p>Install virtualbox:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">install</span> <span class="o">-</span><span class="n">y</span> <span class="n">virtualbox</span>
+</pre></div>
+</div>
+<p>Install vagrant:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">wget</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">releases</span><span class="o">.</span><span class="n">hashicorp</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">vagrant</span><span class="o">/</span><span class="mf">1.8</span><span class="o">.</span><span class="mi">5</span><span class="o">/</span><span class="n">vagrant_1</span><span class="o">.</span><span class="mf">8.5</span><span class="n">_x86_64</span><span class="o">.</span><span class="n">deb</span>
+<span class="n">sudo</span> <span class="n">dpkg</span> <span class="o">-</span><span class="n">i</span> <span class="n">vagrant_1</span><span class="o">.</span><span class="mf">8.5</span><span class="n">_x86_64</span><span class="o">.</span><span class="n">deb</span>
+</pre></div>
+</div>
+<p>Install ansible:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">apt</span><span class="o">-</span><span class="n">add</span><span class="o">-</span><span class="n">repository</span> <span class="n">ppa</span><span class="p">:</span><span class="n">ansible</span><span class="o">/</span><span class="n">ansible</span> <span class="o">-</span><span class="n">y</span>
+<span class="n">sudo</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">update</span>
+<span class="n">sudo</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">install</span> <span class="n">ansible</span> <span class="o">-</span><span class="n">y</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="os-x">
+<h3>OS X<a class="headerlink" href="#os-x" title="Permalink to this headline">¶</a></h3>
+<p>Install virtualbox from <a class="reference external" href="https://www.virtualbox.org/wiki/Downloads">https://www.virtualbox.org/wiki/Downloads</a>.</p>
+<p>Install vagrant from <a class="reference external" href="https://releases.hashicorp.com/vagrant">https://releases.hashicorp.com/vagrant</a>.</p>
+<p>Install ansible (this is a bit more involved. The instructions from <a class="reference external" href="https://valdhaus.co/writings/ansible-mac-osx/">https://valdhaus.co/writings/ansible-mac-osx/</a> are provided here for convenience. If you already have Xcode and <code class="docutils literal"><span class="pre">pip</span></code> installed, you can skip those respective steps.</p>
+<ul>
+<li><p class="first">Install Xcode</p>
+</li>
+<li><p class="first">Install <code class="docutils literal"><span class="pre">pip</span></code></p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">easy_install</span> <span class="n">pip</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Install ansible using <code class="docutils literal"><span class="pre">pip</span></code></p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">pip</span> <span class="n">install</span> <span class="n">ansible</span> <span class="o">--</span><span class="n">quiet</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="start-up-vagrant">
+<h2>Start up vagrant<a class="headerlink" href="#start-up-vagrant" title="Permalink to this headline">¶</a></h2>
+<p>Vagrant may be used to set up the VMs using two steps.  These commands must be called from the example or package folders that contains <code class="docutils literal"><span class="pre">Vagrantfile</span></code>.</p>
+<p>To fire up and configure the VMs using vagrant</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">vagrant</span> <span class="n">up</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="trouble-shooting">
+<h2>Trouble-shooting<a class="headerlink" href="#trouble-shooting" title="Permalink to this headline">¶</a></h2>
+<p>The most common issues are as follows.</p>
+<ul>
+<li><p class="first">Make sure you have an internet connection.</p>
+</li>
+<li><p class="first">Make sure that you have as many cores and RAM available as needed in the example.</p>
+</li>
+<li><p class="first">There might be a bug in ansible that may cause it to fail. You may try again as follows.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">vagrant</span> <span class="n">provision</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">If it fails at the same spot, you may restart the VMs and try again.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">vagrant</span> <span class="n">halt</span>
+<span class="n">vagrant</span> <span class="n">up</span> <span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">provision</span>
+<span class="n">vagrant</span> <span class="n">provision</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Introduction</a><ul>
+<li><a class="reference internal" href="#installation">Installation</a></li>
+<li><a class="reference internal" href="#usage">Usage</a></li>
+<li><a class="reference internal" href="#authorization-configuration">Authorization Configuration</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#examples">Examples</a><ul>
+<li><a class="reference internal" href="#simple-talker-listener-example-simple-pubsub">Simple talker listener example (<cite>simple_pubsub</cite>)</a><ul>
+<li><a class="reference internal" href="#requirements">Requirements</a></li>
+<li><a class="reference internal" href="#using-secure-ros">Using Secure ROS</a></li>
+<li><a class="reference internal" href="#id1">Authorization configuration</a></li>
+<li><a class="reference internal" href="#running-the-example">Running the example</a></li>
+<li><a class="reference internal" href="#test-secure-ros">Test Secure ROS</a><ul>
+<li><a class="reference internal" href="#test-locally">Test locally</a></li>
+<li><a class="reference internal" href="#test-externally">Test externally</a></li>
+<li><a class="reference internal" href="#ros-commands">ROS commands</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#variations-of-talker-listener-example-simple-pubsub">Variations of talker listener example (<cite>simple_pubsub</cite>)</a><ul>
+<li><a class="reference internal" href="#standalone-version">Standalone version</a></li>
+<li><a class="reference internal" href="#network-version">Network version</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#multi-machine-talker-listener-example-multi-pubsub">Multi-machine talker listener example (<cite>multi_pubsub</cite>)</a><ul>
+<li><a class="reference internal" href="#id2">Requirements</a></li>
+<li><a class="reference internal" href="#starting-the-vms">Starting the VMs</a><ul>
+<li><a class="reference internal" href="#vagrant-tasks">Vagrant tasks</a></li>
+<li><a class="reference internal" href="#ansible-playbooks">Ansible playbooks</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#id3">Authorization configuration</a></li>
+<li><a class="reference internal" href="#id4">Running the example</a></li>
+<li><a class="reference internal" href="#test-example">Test example</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#packaging-secure-ros">Packaging Secure ROS</a><ul>
+<li><a class="reference internal" href="#supported-architectures-and-packages">Supported architectures and packages</a></li>
+<li><a class="reference internal" href="#generating-the-packages">Generating the packages</a><ul>
+<li><a class="reference internal" href="#id5">Vagrant tasks</a></li>
+<li><a class="reference internal" href="#id6">Ansible playbooks</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#vagrant-and-ansible">Vagrant and ansible</a><ul>
+<li><a class="reference internal" href="#install-vagrant-and-ansible">Install Vagrant and ansible</a><ul>
+<li><a class="reference internal" href="#ubuntu">Ubuntu</a></li>
+<li><a class="reference internal" href="#os-x">OS X</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#start-up-vagrant">Start up vagrant</a></li>
+<li><a class="reference internal" href="#trouble-shooting">Trouble-shooting</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="nav-item nav-item-0"><a href="#">Secure ROS 0.9.2 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2016, Aravind Sundaresan.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.8.
+    </div>
+  </body>
+</html>
