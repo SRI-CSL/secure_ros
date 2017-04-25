@@ -150,7 +150,7 @@ On machine2 (or any other machine on the network), set ``ROS_MASTER_URI``. ::
   source /opt/secure_ros/kinetic/setup.bash
   export ROS_MASTER_URI=http://192.168.10.201:11311/
 
-You will also need to set ``ROS_IP`` if the hostname of `machine2` cannot be resolved from `machine1`. ::
+You will also need to set ``ROS_IP`` if the hostname of `machine2` cannot be resolved from `machine1`. Please see `ROS Network set-up <http://wiki.ros.org/ROS/NetworkSetup>`_ for details. ::
 
   export ROS_IP=192.168.10.202
 
@@ -160,11 +160,11 @@ You may then run the commands in :ref:`simple_pubsub_test`. You should be unable
 Network version 
 ~~~~~~~~~~~~~~~
 
-You may modify the previous example by adding a second authorized machine (e.g. `machine2` with IP address ``192.168.10.202``) to the subscribers for topic ``/chatter`` (``ros_auth_simple_pubsub_network.yaml``). Run the following commands in each terminal. ::
+You may modify the previous example by adding a second authorized machine (e.g. `machine2` with IP address ``192.168.10.202``) to the subscribers for topic ``/chatter`` (``ros_auth_simple_pubsub_network.yaml``). Run the following commands in each terminal in `machine1`. You only have to set ``ROS_IP`` on all machines if all the hostnames cannot be resolved by all the machines as is standard `ROS Network set-up <http://wiki.ros.org/ROS/NetworkSetup>`_. ::
 
-  unset ROS_IP
-  unset ROS_MASTER_URI
   source /opt/secure_ros/kinetic/setup.bash
+  export ROS_MASTER_URI=http://192.168.10.201:11311
+  export ROS_IP=192.168.10.201
 
 
 To start the master node on `machine1`, ::
