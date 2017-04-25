@@ -255,7 +255,7 @@
 <span class="n">export</span> <span class="n">ROS_MASTER_URI</span><span class="o">=</span><span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="mf">192.168</span><span class="o">.</span><span class="mf">10.201</span><span class="p">:</span><span class="mi">11311</span><span class="o">/</span>
 </pre></div>
 </div>
-<p>You will also need to set <code class="docutils literal"><span class="pre">ROS_IP</span></code> if the hostname of <cite>machine2</cite> cannot be resolved from <cite>machine1</cite>.</p>
+<p>You will also need to set <code class="docutils literal"><span class="pre">ROS_IP</span></code> if the hostname of <cite>machine2</cite> cannot be resolved from <cite>machine1</cite>. Please see <a class="reference external" href="http://wiki.ros.org/ROS/NetworkSetup">ROS Network set-up</a> for details.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">export</span> <span class="n">ROS_IP</span><span class="o">=</span><span class="mf">192.168</span><span class="o">.</span><span class="mf">10.202</span>
 </pre></div>
 </div>
@@ -263,10 +263,10 @@
 </div>
 <div class="section" id="network-version">
 <h3>Network version<a class="headerlink" href="#network-version" title="Permalink to this headline">¶</a></h3>
-<p>You may modify the previous example by adding a second authorized machine (e.g. <cite>machine2</cite> with IP address <code class="docutils literal"><span class="pre">192.168.10.202</span></code>) to the subscribers for topic <code class="docutils literal"><span class="pre">/chatter</span></code> (<code class="docutils literal"><span class="pre">ros_auth_simple_pubsub_network.yaml</span></code>). Run the following commands in each terminal.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">unset</span> <span class="n">ROS_IP</span>
-<span class="n">unset</span> <span class="n">ROS_MASTER_URI</span>
-<span class="n">source</span> <span class="o">/</span><span class="n">opt</span><span class="o">/</span><span class="n">secure_ros</span><span class="o">/</span><span class="n">kinetic</span><span class="o">/</span><span class="n">setup</span><span class="o">.</span><span class="n">bash</span>
+<p>You may modify the previous example by adding a second authorized machine (e.g. <cite>machine2</cite> with IP address <code class="docutils literal"><span class="pre">192.168.10.202</span></code>) to the subscribers for topic <code class="docutils literal"><span class="pre">/chatter</span></code> (<code class="docutils literal"><span class="pre">ros_auth_simple_pubsub_network.yaml</span></code>). Run the following commands in each terminal in <cite>machine1</cite>. You only have to set <code class="docutils literal"><span class="pre">ROS_IP</span></code> on all machines if all the hostnames cannot be resolved by all the machines as is standard <a class="reference external" href="http://wiki.ros.org/ROS/NetworkSetup">ROS Network set-up</a>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">source</span> <span class="o">/</span><span class="n">opt</span><span class="o">/</span><span class="n">secure_ros</span><span class="o">/</span><span class="n">kinetic</span><span class="o">/</span><span class="n">setup</span><span class="o">.</span><span class="n">bash</span>
+<span class="n">export</span> <span class="n">ROS_MASTER_URI</span><span class="o">=</span><span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="mf">192.168</span><span class="o">.</span><span class="mf">10.201</span><span class="p">:</span><span class="mi">11311</span>
+<span class="n">export</span> <span class="n">ROS_IP</span><span class="o">=</span><span class="mf">192.168</span><span class="o">.</span><span class="mf">10.201</span>
 </pre></div>
 </div>
 <p>To start the master node on <cite>machine1</cite>,</p>
@@ -318,8 +318,8 @@
 </pre></div>
 </div>
 <p>The minimum number of Virtual Machines (VMs) required for the example is 3. pubsub4 may be used as a malicious machine to test Secure ROS and intercept ROS communication.</p>
-<div class="section" id="id2">
-<h3>Requirements<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id3">
+<h3>Requirements<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
 <p>The following requirements are needed to run the example.</p>
 <ul class="simple">
 <li>Connection to the internet on the host machine so that vagrant and ansible can fetch the images and debian packages.</li>
@@ -352,8 +352,8 @@
 </ul>
 </div>
 </div>
-<div class="section" id="id3">
-<h3>Authorization configuration<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id4">
+<h3>Authorization configuration<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
 <p>The authorization configuration is in <code class="docutils literal"><span class="pre">ros_auth_multi_pubsub.yaml</span></code> and its contents are presented below.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">aliases</span><span class="p">:</span>
   <span class="n">vm2</span><span class="p">:</span> <span class="p">[</span><span class="mf">192.168</span><span class="o">.</span><span class="mf">10.202</span><span class="p">]</span>
@@ -371,8 +371,8 @@
 </pre></div>
 </div>
 </div>
-<div class="section" id="id4">
-<h3>Running the example<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id5">
+<h3>Running the example<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
 <p>To run the nodes, run the following commands in the different VMs. Note that the correct environment is sourced from the files generated by <em>ansible</em>.</p>
 <p>You will be able to ssh into each VM using vagrant from the root of the example folder (where the Vagrantfile is). For instance, to ssh into VM1, use the following command.:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">vagrant</span> <span class="n">ssh</span> <span class="n">pubsub1</span>
@@ -588,15 +588,15 @@ killed
 </pre></div>
 </div>
 <p>The package is created in the root folder of the repository: <code class="docutils literal"><span class="pre">deb/&lt;arch&gt;/secure-ros-&lt;release&gt;-ros-comm_&lt;version&gt;_&lt;arch&gt;.deb</span></code>. The build is preserved if the VMs are halted, but will need to be rebuilt if the VMs are destroyed.</p>
-<div class="section" id="id5">
-<h3>Vagrant tasks<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id6">
+<h3>Vagrant tasks<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li>Bring up the VMs as specified in the <code class="docutils literal"><span class="pre">secure_ros.yaml</span></code> configuration file.</li>
 <li>Provision the VMs as specified in the <code class="docutils literal"><span class="pre">secure_ros.yaml</span></code> files (build, create and install the Secure ROS package).</li>
 </ul>
 </div>
-<div class="section" id="id6">
-<h3>Ansible playbooks<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id7">
+<h3>Ansible playbooks<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><code class="docutils literal"><span class="pre">plays/install-secure-ros.yaml</span></code>: Please see <a class="reference internal" href="#pubsub-ansible"><span class="std std-ref">Ansible playbooks</span></a>.</li>
 <li><code class="docutils literal"><span class="pre">plays/build-secure-ros.yaml</span></code>: Please see <a class="reference internal" href="#pubsub-ansible"><span class="std std-ref">Ansible playbooks</span></a>.</li>
@@ -605,7 +605,7 @@ killed
 </div>
 </div>
 <div class="section" id="vagrant-and-ansible">
-<span id="id7"></span><h1>Vagrant and ansible<a class="headerlink" href="#vagrant-and-ansible" title="Permalink to this headline">¶</a></h1>
+<span id="id8"></span><h1>Vagrant and ansible<a class="headerlink" href="#vagrant-and-ansible" title="Permalink to this headline">¶</a></h1>
 <p>We use <em>ansible</em> and <em>vagrant</em> to create and configure multiple VMs to run the examples and create debian package for Secure ROS.</p>
 <div class="section" id="install-vagrant-and-ansible">
 <h2>Install Vagrant and ansible<a class="headerlink" href="#install-vagrant-and-ansible" title="Permalink to this headline">¶</a></h2>
@@ -723,14 +723,14 @@ killed
 </ul>
 </li>
 <li><a class="reference internal" href="#multi-machine-talker-listener-example-multi-pubsub">Multi-machine talker listener example (<cite>multi_pubsub</cite>)</a><ul>
-<li><a class="reference internal" href="#id2">Requirements</a></li>
+<li><a class="reference internal" href="#id3">Requirements</a></li>
 <li><a class="reference internal" href="#starting-the-vms">Starting the VMs</a><ul>
 <li><a class="reference internal" href="#vagrant-tasks">Vagrant tasks</a></li>
 <li><a class="reference internal" href="#ansible-playbooks">Ansible playbooks</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#id3">Authorization configuration</a></li>
-<li><a class="reference internal" href="#id4">Running the example</a></li>
+<li><a class="reference internal" href="#id4">Authorization configuration</a></li>
+<li><a class="reference internal" href="#id5">Running the example</a></li>
 <li><a class="reference internal" href="#test-example">Test example</a></li>
 </ul>
 </li>
@@ -739,8 +739,8 @@ killed
 <li><a class="reference internal" href="#packaging-secure-ros">Packaging Secure ROS</a><ul>
 <li><a class="reference internal" href="#supported-architectures-and-packages">Supported architectures and packages</a></li>
 <li><a class="reference internal" href="#generating-the-packages">Generating the packages</a><ul>
-<li><a class="reference internal" href="#id5">Vagrant tasks</a></li>
-<li><a class="reference internal" href="#id6">Ansible playbooks</a></li>
+<li><a class="reference internal" href="#id6">Vagrant tasks</a></li>
+<li><a class="reference internal" href="#id7">Ansible playbooks</a></li>
 </ul>
 </li>
 </ul>
