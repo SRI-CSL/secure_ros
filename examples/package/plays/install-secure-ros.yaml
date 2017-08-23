@@ -11,7 +11,7 @@
       register: dpkg_architecture
     - set_fact:
         arch: "{{ dpkg_architecture.stdout }}"
-        workspace: "~/workspace"
+        workspace: "~/workspace/{{ ros_release }}"
         ros_depends:
           - "ros-{{ ros_release }}-ros-comm"
           - "ros-{{ ros_release }}-nodelet-core"
@@ -20,7 +20,7 @@
     - set_fact:
         package_fullname: "{{ package_name }}_{{ package_version }}_{{ arch }}"
     - set_fact:
-        release_path: "{{ secure_ros_folder }}/deb/{{ ros_release }}"
+        release_path: "{{ secure_ros_folder }}/deb/{{ ubuntu_release }}/{{ ros_release }}"
     - set_fact:
         package_path: "{{ release_path }}/{{ arch }}/{{ package_fullname }}"
     - name: check if deb exists
