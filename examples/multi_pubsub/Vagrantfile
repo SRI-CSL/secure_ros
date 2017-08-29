@@ -11,6 +11,7 @@ GUEST_SROS_FOLDER = "/secure_ros"
 VAGRANT_ROOT = File.dirname(__FILE__)
 SECURE_ROS_CONF = YAML.load_file("#{VAGRANT_ROOT}/secure_ros.yaml")
 VERSION = SECURE_ROS_CONF["version"]
+UBUNTU_RELEASE = SECURE_ROS_CONF["ubuntu"]
 RELEASE = SECURE_ROS_CONF["release"]
 ARCHITECTURES = SECURE_ROS_CONF["architectures"]
 WORKSPACE = "~/workspace"
@@ -46,6 +47,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         ansible.extra_vars = { 
           secure_ros_folder: GUEST_SROS_FOLDER,
           ros_release: RELEASE,
+          ubuntu_release: UBUNTU_RELEASE,
           package_version: VERSION,
         }
       end
