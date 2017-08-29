@@ -1,8 +1,7 @@
 cpus: 1
 memory: 1024
-release: kinetic
+release: lunar
 ubuntu: xenial
 version: 0.9.3-1
 architectures:
   amd64: {box: xenial64}
-  i386: {box: xenial32}
