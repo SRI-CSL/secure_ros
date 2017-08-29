@@ -70,3 +70,30 @@ A sample configuration file from the `multi_pubsub` example is provided below. T
 
 ``authorized_ip_addresses`` is an internal set containing all the IP addresses that are listed in the authorization file. Any request from an IP address not on this list is, in general, discarded. This list is also used as an authorized list for nodes, parameters or services that are not explicitly listed in the file.
 
+
+IPSec configuration 
+-------------------
+
+Secure ROS relies on IPSec to ensure that IP packets are not tampered or spoofed. Therefore, IPsec needs to be configured correctly in order for Secure ROS to work well against malicious attacks. We have provided the ``secure_ros_tools`` python package in order to generate keys and configuration files for IPSec. The following steps need to be followed to create the IPsec configuration files. 
+
+- Install the ``secure_ros_tools`` package. ::
+
+    sudo apt-get install racoon ipsec-tools
+    sudo pip install git+https://github.com/SRI-CSL/secure_ros_tools.git
+
+- Create YAML file (e.g. ``hosts.yaml``) with all hosts in the system as follows. ::
+    
+    machine1: 192.168.10.201
+    machine2: 192.168.10.202
+    machine3: 192.168.10.203
+
+- Generate configuration files for IPsec.::
+
+    create_ipsec_conf -i hosts.yaml
+
+  This will create a folder for each machine with keys and configuration files. E.g. the files for ``machine1`` are located in ``output/machine1``. A ``tar.gz`` file is also created for each machine.
+
+- Copy the ``tar.gz`` files to the appropriate machines and untar them into the appropriate folder on the respective machines. 
+  E.g., on ``machine1``, untar the contents of ``machine1.tgz``. ::
+    sudo tar xzf machine1.tgz -C /
+
