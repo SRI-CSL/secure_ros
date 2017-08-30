@@ -103,6 +103,37 @@
 </ul>
 <p><code class="docutils literal"><span class="pre">authorized_ip_addresses</span></code> is an internal set containing all the IP addresses that are listed in the authorization file. Any request from an IP address not on this list is, in general, discarded. This list is also used as an authorized list for nodes, parameters or services that are not explicitly listed in the file.</p>
 </div>
+<div class="section" id="ipsec-configuration">
+<h2>IPSec configuration<a class="headerlink" href="#ipsec-configuration" title="Permalink to this headline">¶</a></h2>
+<p>Secure ROS relies on IPSec to ensure that IP packets are not tampered or spoofed. Therefore, IPsec needs to be configured correctly in order for Secure ROS to work well against malicious attacks. We have provided the <code class="docutils literal"><span class="pre">secure_ros_tools</span></code> python package in order to generate keys and configuration files for IPSec. The following steps need to be followed to create the IPsec configuration files.</p>
+<ul>
+<li><p class="first">Install the <code class="docutils literal"><span class="pre">secure_ros_tools</span></code> package.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">install</span> <span class="n">racoon</span> <span class="n">ipsec</span><span class="o">-</span><span class="n">tools</span> <span class="n">python</span><span class="o">-</span><span class="n">pip</span> <span class="n">python3</span><span class="o">-</span><span class="n">pip</span>
+<span class="n">sudo</span> <span class="n">pip</span> <span class="n">install</span> <span class="n">git</span><span class="o">+</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">SRI</span><span class="o">-</span><span class="n">CSL</span><span class="o">/</span><span class="n">secure_ros_tools</span><span class="o">.</span><span class="n">git</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Create YAML file (e.g. <code class="docutils literal"><span class="pre">hosts.yaml</span></code>) with all hosts in the system as follows. In this example, there are three hosts.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">machine1</span><span class="p">:</span> <span class="mf">192.168</span><span class="o">.</span><span class="mf">10.201</span>
+<span class="n">machine2</span><span class="p">:</span> <span class="mf">192.168</span><span class="o">.</span><span class="mf">10.202</span>
+<span class="n">machine3</span><span class="p">:</span> <span class="mf">192.168</span><span class="o">.</span><span class="mf">10.203</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Generate configuration files for IPsec.:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">create_ipsec_conf</span> <span class="o">-</span><span class="n">i</span> <span class="n">hosts</span><span class="o">.</span><span class="n">yaml</span>
+</pre></div>
+</div>
+<p>This will create a folder for each machine with keys and configuration files. E.g. the files for <code class="docutils literal"><span class="pre">machine1</span></code> are located in <code class="docutils literal"><span class="pre">output/machine1</span></code>. A <code class="docutils literal"><span class="pre">tar.gz</span></code> file is also created for each machine.</p>
+</li>
+<li><p class="first">Copy the <code class="docutils literal"><span class="pre">tar.gz</span></code> files to the appropriate machines and untar them into the appropriate folder on the respective machines.</p>
+<p>E.g., on <code class="docutils literal"><span class="pre">machine1</span></code>, untar the contents of <code class="docutils literal"><span class="pre">machine1.tgz</span></code>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">tar</span> <span class="n">xzf</span> <span class="n">machine1</span><span class="o">.</span><span class="n">tgz</span> <span class="o">-</span><span class="n">C</span> <span class="o">/</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
 </div>
 <div class="section" id="examples">
 <h1>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h1>
@@ -688,6 +719,7 @@ killed
 <li><a class="reference internal" href="#installation">Installation</a></li>
 <li><a class="reference internal" href="#usage">Usage</a></li>
 <li><a class="reference internal" href="#authorization-configuration">Authorization Configuration</a></li>
+<li><a class="reference internal" href="#ipsec-configuration">IPSec configuration</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#examples">Examples</a><ul>
